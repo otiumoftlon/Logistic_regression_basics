@@ -8,6 +8,65 @@ from sklearn.metrics import accuracy_score
 from Aux_Function.PCAM import *
 
 def Logistic_Regression(X,y,stop,initial_guess = None,max_iter=1000, error_diff=1e-3,step=0.001):
+    """
+    Performs logistic regression using gradient descent to optimize the parameters of the model.
+    The function iteratively minimizes the log-loss (cross-entropy) and updates the parameters 
+    until the specified stopping criteria are met.
+
+    Parameters:
+    -----------
+    X : array-like (NumPy array, DataFrame)
+        The feature matrix where each row is a data point and each column is a feature.
+
+    y : array-like (NumPy array, Series)
+        The target vector containing binary labels (0 or 1) for each data point.
+
+    stop : float
+        The target error threshold. The algorithm will stop when the log-loss falls below this value.
+
+    initial_guess : array-like, optional, default=None
+        The initial values of the model parameters (weights and bias). If None, the parameters are initialized to zeros.
+
+    max_iter : int, optional, default=1000
+        The maximum number of iterations for gradient descent. The algorithm will stop if this limit is reached.
+
+    error_diff : float, optional, default=1e-3
+        The minimum difference in loss between consecutive iterations. If the difference between the loss of two consecutive
+        iterations is less than this value, the algorithm assumes it has converged and stops.
+
+    step : float, optional, default=0.001
+        The learning rate or step size for updating the parameters in each iteration.
+
+    Returns:
+    --------
+    pa : list of NumPy arrays
+        A list containing the parameter values at each iteration of gradient descent.
+
+    losses : list of floats
+        A list containing the log-loss values at each iteration of the optimization process.
+
+    Process:
+    --------
+    1. Converts the input data `X` and `y` into NumPy arrays (if they are not already in that format).
+    2. Initializes model parameters as zeros (or uses `initial_guess` if provided).
+    3. Adds a bias term (column of ones) to the feature matrix `X`.
+    4. Computes predictions using the logistic sigmoid function: `predictions = 1 / (1 + exp(-z))`, where `z = X @ parameters`.
+    5. Calculates the log-loss (cross-entropy) and tracks the change in loss to determine convergence.
+    6. Performs gradient descent to iteratively adjust parameters: `parameters -= step * gradient`, where `gradient = X.T @ (predictions - y)`.
+    7. Plots the error over iterations to visualize the learning progress.
+    8. Stops if the loss drops below `stop`, the maximum number of iterations is reached, or the loss difference is below `error_diff`.
+
+    Note:
+    -----
+    - A small value `epsilon = 1e-15` is used to avoid taking the logarithm of zero, which would cause computational errors.
+    - The error (log-loss) is recalculated after each parameter update, and the model parameters are stored at each step for future analysis.
+    - The plot of the loss function updates every 20 iterations to show how the error decreases over time.
+
+    Example Usage:
+    --------------
+    # X and y are your data (features and target)
+    pa, losses = Logistic_Regression(X, y, stop=0.1, step=0.01, max_iter=500)
+    """
 
     X = X.to_numpy()  # Convert feature matrix to NumPy array if it's a DataFrame
     y = y.to_numpy()  # Convert target vector to NumPy array if it's a Series
@@ -76,17 +135,43 @@ def Logistic_Regression(X,y,stop,initial_guess = None,max_iter=1000, error_diff=
 
 def calculate_accuracy(y_true, y_pred,threshold = 0.5):
     """
-    Calculate the accuracy of predictions.
+    Calculate the accuracy of binary classification predictions based on a threshold.
+
+    This function compares the true labels (`y_true`) to the predicted probabilities (`y_pred`).
+    The predictions are converted into binary class labels (0 or 1) using the specified threshold, 
+    and the accuracy is calculated as the proportion of correct predictions.
 
     Parameters:
+    -----------
     y_true : np.array
-        Array of true labels (ground truth).
+        A NumPy array containing the true labels (ground truth), with binary values (0 or 1).
+    
     y_pred : np.array
-        Array of predicted labels.
-
+        A NumPy array containing the predicted probabilities or scores (floating point values between 0 and 1).
+    
+    threshold : float, optional, default=0.5
+        The decision threshold for converting predicted probabilities into binary class labels.
+        Predictions greater than or equal to this threshold are classified as 1, otherwise as 0.
+    
     Returns:
+    --------
     float
-        Accuracy as a percentage.
+        The accuracy of the predictions, expressed as a fraction of correct predictions (between 0 and 1).
+        To get the accuracy as a percentage, multiply the result by 100.
+    
+    Example:
+    --------
+    >>> y_true = np.array([0, 1, 0, 1, 1])
+    >>> y_pred = np.array([0.4, 0.7, 0.1, 0.9, 0.3])
+    >>> calculate_accuracy(y_true, y_pred, threshold=0.5)
+    0.8  # 80% accuracy
+    
+    Notes:
+    ------
+    - This function assumes binary classification. For multi-class classification, you would need to modify
+      the thresholding logic accordingly.
+    - The threshold parameter allows flexibility in adjusting the cutoff point for classification, 
+      which can be useful in cases where the default threshold of 0.5 does not yield optimal results.
     """
     # Ensure the arrays are numpy arrays
     y_true = np.array(y_true)
@@ -105,15 +190,6 @@ def calculate_accuracy(y_true, y_pred,threshold = 0.5):
 df = pd.read_csv('Logistic Regression\data.csv',index_col='id')
 
 df.pop('Unnamed: 32')
-
-# for col in df.columns:
-#     if col != 'diagnosis':
-#         plt.figure(figsize=(10, 6))
-#         sns.boxplot(x='diagnosis', y=col, data=df)
-#         plt.title(f'{col} by Diagnosis')
-#         plt.show()
-
-#Changing the categorical values
 
 df['diagnosis'] = df['diagnosis'].replace({'B': 0, 'M': 1})
 target = df.pop('diagnosis')
@@ -147,7 +223,6 @@ guess = np.array([[0.8],  [0.5],   [1.1],  [0.80],  [0.3],  [0.7],
    [0.10], [-0.70], [-0.51], [-0.1], [-0.1],  [0.16],[-0.3]])
 
 
-guess1 = (np.random.rand(len(all_features)+1) * 0.01).reshape(-1, 1)
 
 guess2 = np.array([[ 0.40392482],[ 0.41266399],[ 0.39714751],[ 0.43587837],[ 0.36510169],[ 0.40506256],[ 0.36778254],
  [ 0.36331652],[ 0.29575821],[ 0.31030392],[ 0.11823894],[ 0.21039784],[ 0.34552401],[ 0.27873287],[ 0.30750716],[ 0.42831375],[ 0.3026845 ],[ 0.31152481],[ 0.337624  ],[ 0.06620303],
@@ -187,6 +262,5 @@ log_reg_c.fit(X_train_pc, y_train_pc)
 
 predictions_sk_pc = log_reg_c.predict(X_test_pc)
 
-# Calculate accuracy
 accuracy_sk_pc = accuracy_score(y_test_pc, predictions_sk_pc)
 print(f'Accuracy: sklearn {accuracy_sk_pc}')
