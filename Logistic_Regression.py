@@ -200,6 +200,7 @@ corr_matrix = df_stand.corr()
 
 
 corr_features = corr_matrix['diagnosis'].sort_values(ascending=False)
+print(corr_features)
 target = df_stand.pop('diagnosis')
 
 possible_features = list(corr_features[1:13].index)
@@ -213,7 +214,7 @@ coefficients = log_reg.coef_
 predictions_sk = log_reg.predict(X_test)
 
 # Calculate accuracy
-accuracy_sk = accuracy_score(y_test, predictions_sk)
+accuracy_sk = calculate_accuracy(y_test, predictions_sk)
 print(f'Accuracy: sklearn {accuracy_sk}')
 
 guess = np.array([[0.8],  [0.5],   [1.1],  [0.80],  [0.3],  [0.7],
@@ -227,7 +228,7 @@ guess = np.array([[0.8],  [0.5],   [1.1],  [0.80],  [0.3],  [0.7],
 guess2 = np.array([[ 0.40392482],[ 0.41266399],[ 0.39714751],[ 0.43587837],[ 0.36510169],[ 0.40506256],[ 0.36778254],
  [ 0.36331652],[ 0.29575821],[ 0.31030392],[ 0.11823894],[ 0.21039784],[ 0.34552401],[ 0.27873287],[ 0.30750716],[ 0.42831375],[ 0.3026845 ],[ 0.31152481],[ 0.337624  ],[ 0.06620303],
  [ 0.16083588],[ 0.08504965],[ 0.08159758],[-0.09701599],[-0.06611082],[-0.18872812],[-0.06416024],[ 0.0174786 ],[-0.16918578],[-0.00568988],[-0.31386277]])
-coef, acc = Logistic_Regression(X_train,y_train,stop=1e-10,max_iter=5000,error_diff=1e-6,step=1e-3,initial_guess=guess)
+coef, acc = Logistic_Regression(X_train,y_train,stop=1e-10,max_iter=5000,error_diff=1e-6,step=1e-3,initial_guess=None)
 
 z=X_test@coef[-1][0:-1] + coef[-1][-1]
 predictions_me = 1/(1+np.exp(-z))
@@ -235,6 +236,14 @@ predictions_me = 1/(1+np.exp(-z))
 print('Acuuracy mine',calculate_accuracy(y_test,predictions_me))
 
 plt.ioff() 
+
+plt.figure()
+bars = plt.bar(['Sklearn','My_Implementation'], [calculate_accuracy(y_test,predictions_sk),calculate_accuracy(y_test,predictions_me)])
+for bar in bars:
+    yval = bar.get_height()
+    plt.text(bar.get_x() + bar.get_width()/2, yval, round(yval,3), ha='center', va='bottom')
+plt.title('Accuracy')
+plt.show()
 
 plt.figure()
 ax = sns.heatmap(corr_matrix, annot=False, cmap='coolwarm',
